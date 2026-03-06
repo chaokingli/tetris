@@ -8,23 +8,27 @@ interface CellProps {
   isGhost?: boolean;
 }
 
-const CELL_SIZE_PX = 30;
+// Responsive cell sizes
+const CELL_SIZE_PX = 24; // Base size, will be overridden by responsive classes
 const BORDER_RADIUS = '4px';
 
 export function TetrisCell({ value, isGhost }: CellProps) {
   const baseColor = getColorForValue(value);
   
   if (value === 0 && !isGhost) {
-    return <div className="bg-gray-800/30" style={{ width: CELL_SIZE_PX, height: CELL_SIZE_PX, borderRadius: BORDER_RADIUS, border: '1px solid rgba(255,255,255,0.05)' }} />;
+    return (
+      <div 
+        className="bg-gray-800/30 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-sm" 
+        style={{ borderRadius: BORDER_RADIUS, border: '1px solid rgba(255,255,255,0.05)' }}
+      />
+    );
   }
 
   return (
     <div
-      className={isGhost ? 'border-2 border-dashed' : ''}
+      className={`${isGhost ? 'border-2 border-dashed' : ''} w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-sm`}
       style={{
         backgroundColor: isGhost ? baseColor + '33' : baseColor,
-        width: CELL_SIZE_PX,
-        height: CELL_SIZE_PX,
         borderRadius: BORDER_RADIUS,
         border: value > 0 && !isGhost ? `2px solid rgba(255,255,255,0.4)` : `1px solid rgba(255,255,255,0.1)`,
         boxShadow: !isGhost && value > 0 ? `0 0 8px ${baseColor}60, inset 0 0 4px rgba(255,255,255,0.2)` : 'none',
@@ -94,7 +98,7 @@ export function GameBoard({ board, currentPiece, ghostY }: GameBoardProps) {
   }
 
   return (
-    <div className="inline-block bg-gradient-to-br from-gray-900 to-gray-800 p-3 rounded-xl border-4 border-gray-600 shadow-2xl">
+    <div className="inline-block bg-gradient-to-br from-gray-900 to-gray-800 p-2 sm:p-3 rounded-xl border-4 border-gray-600 shadow-2xl">
       {renderBoard.map((row, rowIndex) => (
         <div key={rowIndex} className="flex gap-0.5 mb-0.5 last:mb-0">
           {row.map((cellValue, colIndex) => (

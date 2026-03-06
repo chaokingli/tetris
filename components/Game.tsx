@@ -388,94 +388,126 @@ export function Game() {
   const ghostY = getGhostY();
 
   return (
-    <div className="min-h-screen bg-gray-950 flex items-center justify-center p-4">
-      <div className="flex gap-8 max-w-4xl w-full">
-        {/* Left panel - Stats */}
-        <div className="w-48 space-y-4">
-          <h1 className="text-3xl font-bold text-white mb-4 text-center">Tetris</h1>
-          
-          {gameOver && (
-            <div className="bg-red-900/50 border-2 border-red-700 rounded-lg p-4 text-center animate-pulse">
-              <p className="text-xl font-bold text-red-300 mb-2">GAME OVER</p>
-              <p className="text-gray-200 mb-2">Score: {score}</p>
-              <button
-                onClick={resetGame}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-bold"
-              >
-                Play Again (R)
-              </button>
-            </div>
-          )}
+    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950 flex items-center justify-center p-2 sm:p-4 overflow-hidden relative">
+      {/* Background decorative Tetrominoes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-10 left-10 opacity-20 text-6xl">🟦</div>
+        <div className="absolute top-20 right-20 opacity-20 text-6xl">🟩</div>
+        <div className="absolute bottom-20 left-20 opacity-20 text-6xl">🟪</div>
+        <div className="absolute bottom-10 right-10 opacity-20 text-6xl">🟧</div>
+      </div>
 
-          {!gameOver && (
-            <div className="space-y-3">
-              <div className="bg-gray-800 p-3 rounded-lg">
-                <p className="text-gray-400 text-sm">Score</p>
-                <p className="text-2xl font-bold text-white">{score.toLocaleString()}</p>
-              </div>
+      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 max-w-7xl w-full items-center lg:items-start justify-center">
+        {/* Mobile/Tablet Logo */}
+        <div className="lg:hidden w-full text-center mb-2">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 bg-clip-text text-transparent drop-shadow-lg">
+            TETRIS
+          </h1>
+        </div>
 
-              <div className="bg-gray-800 p-3 rounded-lg">
-                <p className="text-gray-400 text-sm">Lines</p>
-                <p className="text-xl font-bold text-cyan-400">{lines}</p>
-              </div>
-
-              <div className="bg-gray-800 p-3 rounded-lg">
-                <p className="text-gray-400 text-sm">Level</p>
-                <p className="text-xl font-bold text-yellow-400">{level}</p>
-              </div>
-            </div>
-          )}
-
-          {highScores.length > 0 && (
-            <div className="bg-gray-800 p-3 rounded-lg">
-              <h3 className="text-gray-300 font-bold mb-2">High Scores</h3>
-              <ul className="space-y-1 text-sm">
-                {highScores.slice(0, 5).map((entry, i) => (
-                  <li key={i}>
-                    <span className="text-green-400 font-bold">{entry.score.toLocaleString()}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Controls help */}
-          {!gameOver && (
-            <div className="bg-gray-800 p-3 rounded-lg text-xs">
-              <h3 className="text-gray-300 font-bold mb-2">Controls</h3>
-              <ul className="space-y-1 text-gray-400">
-                <li><span className="text-white font-mono">←→</span> Move</li>
-                <li><span className="text-white font-mono">↑</span> Rotate</li>
-                <li><span className="text-white font-mono">↓</span> Soft drop</li>
-                <li><span className="text-white font-mono">Space</span> Hard drop</li>
-                <li><span className="text-white font-mono">P</span> Pause</li>
-              </ul>
-            </div>
-          )}
-
-          {!isPaused && !gameOver && (
-            <button
-              onClick={() => setIsPaused(true)}
-              className="w-full bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded font-bold"
-            >
-              Pause Game
-            </button>
-          )}
-
-          {isPaused && !gameOver && (
-            <button
-              onClick={() => setIsPaused(false)}
-              className="w-full bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-bold"
-            >
-              Resume Game
-            </button>
-          )}
+        {/* Left Panel - Controls (Desktop only) */}
+        <div className="hidden lg:block w-48 xl:w-56 flex-shrink-0">
+          <div className="bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl border border-gray-700 shadow-xl sticky top-4">
+            <h3 className="text-white font-bold text-lg mb-3 text-center">CONTROLS</h3>
+            <ul className="space-y-2 text-sm">
+              <li className="flex items-center gap-2">
+                <div className="flex gap-1">
+                  <kbd className="bg-gray-700 text-white px-2 py-1 rounded text-xs font-mono">←</kbd>
+                  <kbd className="bg-gray-700 text-white px-2 py-1 rounded text-xs font-mono">→</kbd>
+                </div>
+                <span className="text-gray-300">Move</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <kbd className="bg-gray-700 text-white px-2 py-1 rounded text-xs font-mono">↑</kbd>
+                <span className="text-gray-300">Rotate</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <kbd className="bg-gray-700 text-white px-2 py-1 rounded text-xs font-mono">↓</kbd>
+                <span className="text-gray-300">Soft drop</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <kbd className="bg-gray-700 text-white px-2 py-1 rounded text-xs font-mono">Space</kbd>
+                <span className="text-gray-300">Hard drop</span>
+              </li>
+              <li className="flex items-center gap-2">
+                <kbd className="bg-gray-700 text-white px-2 py-1 rounded text-xs font-mono">P</kbd>
+                <span className="text-gray-300">Pause</span>
+              </li>
+            </ul>
+          </div>
         </div>
 
         {/* Center - Game Board */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 flex flex-col items-center">
+          {/* Mobile Stats Bar */}
+          <div className="lg:hidden w-full grid grid-cols-3 gap-2 mb-3">
+            <div className="bg-gray-800/80 backdrop-blur-sm p-2 rounded-lg text-center">
+              <p className="text-gray-400 text-xs">SCORE</p>
+              <p className="text-lg font-bold text-white">{score.toLocaleString()}</p>
+            </div>
+            <div className="bg-gray-800/80 backdrop-blur-sm p-2 rounded-lg text-center">
+              <p className="text-gray-400 text-xs">LINES</p>
+              <p className="text-lg font-bold text-cyan-400">{lines}</p>
+            </div>
+            <div className="bg-gray-800/80 backdrop-blur-sm p-2 rounded-lg text-center">
+              <p className="text-gray-400 text-xs">LEVEL</p>
+              <p className="text-lg font-bold text-yellow-400">{level}</p>
+            </div>
+          </div>
+
+          {/* Mobile Controls */}
+          <div className="lg:hidden w-full mb-3">
+            <div className="bg-gray-800/80 backdrop-blur-sm p-3 rounded-lg">
+              <div className="grid grid-cols-4 gap-2">
+                <button
+                  onTouchStart={(e) => { e.preventDefault(); movePiece(-1); }}
+                  onClick={() => movePiece(-1)}
+                  className="bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white p-3 rounded-lg text-xl font-bold"
+                >
+                  ←
+                </button>
+                <button
+                  onTouchStart={(e) => { e.preventDefault(); movePiece(1); }}
+                  onClick={() => movePiece(1)}
+                  className="bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white p-3 rounded-lg text-xl font-bold"
+                >
+                  →
+                </button>
+                <button
+                  onTouchStart={(e) => { e.preventDefault(); rotatePiece('clockwise'); }}
+                  onClick={() => rotatePiece('clockwise')}
+                  className="bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white p-3 rounded-lg text-xl font-bold"
+                >
+                  ↻
+                </button>
+                <button
+                  onTouchStart={(e) => { e.preventDefault(); hardDrop(); }}
+                  onClick={() => hardDrop()}
+                  className="bg-orange-600 hover:bg-orange-700 active:bg-orange-500 text-white p-3 rounded-lg text-xs font-bold"
+                >
+                  DROP
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <button
+                  onTouchStart={(e) => { e.preventDefault(); if (currentPiece && !checkCollision(board, currentPiece.type, currentPiece.y + 1, currentPiece.rotation)) { setCurrentPiece(prev => prev ? ({ ...prev, y: prev.y + 1 }) : null); setScore(prev => prev + 1); } }}
+                  onClick={() => { if (currentPiece && !checkCollision(board, currentPiece.type, currentPiece.y + 1, currentPiece.rotation)) { setCurrentPiece(prev => prev ? ({ ...prev, y: prev.y + 1 }) : null); setScore(prev => prev + 1); } }}
+                  className="bg-gray-700 hover:bg-gray-600 active:bg-gray-500 text-white p-3 rounded-lg text-xl font-bold"
+                >
+                  ↓
+                </button>
+                <button
+                  onClick={() => setIsPaused(prev => !prev)}
+                  className="bg-yellow-600 hover:bg-yellow-700 active:bg-yellow-500 text-white p-3 rounded-lg font-bold text-sm"
+                >
+                  {isPaused ? 'RESUME' : 'PAUSE'}
+                </button>
+              </div>
+            </div>
+          </div>
+
           {isPaused && !gameOver ? (
-            <div className="bg-gray-900 border-4 border-yellow-600 rounded-lg p-8 w-[320px] h-[570px] flex items-center justify-center">
+            <div className="bg-gray-900/90 backdrop-blur-sm border-4 border-yellow-600 rounded-xl p-8 w-[280px] sm:w-[320px] h-[504px] sm:h-[570px] flex items-center justify-center shadow-2xl">
               <p className="text-yellow-500 text-2xl font-bold animate-pulse">PAUSED</p>
             </div>
           ) : (
@@ -485,43 +517,123 @@ export function Game() {
               ghostY={ghostY}
             />
           )}
+
+          {/* Game Over Modal */}
+          {gameOver && (
+            <div className="mt-4 bg-red-900/50 border-2 border-red-700 rounded-xl p-4 text-center animate-pulse shadow-xl">
+              <p className="text-xl font-bold text-red-300 mb-2">GAME OVER</p>
+              <p className="text-gray-200 mb-3">Final Score: <span className="text-yellow-400 font-bold">{score.toLocaleString()}</span></p>
+              <button
+                onClick={resetGame}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-bold transition"
+              >
+                Play Again
+              </button>
+            </div>
+          )}
         </div>
 
-        {/* Right panel - Next piece */}
-        <div className="w-32">
-          <h2 className="text-gray-400 text-center mb-2">Next</h2>
-          <div className="bg-gray-800 p-4 rounded-lg flex items-center justify-center min-h-[150px]">
-            {nextPiece && (
-              <div className="grid gap-1" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
-                {(() => {
-                  const tetromino = getTetromino(nextPiece);
-                  return Array.from({ length: 3 }).map((_, row) => 
-                    Array.from({ length: 3 }).map((_, col) => (
-                      <div
-                        key={`${row}-${col}`}
-                        className={`w-6 h-6 rounded-sm ${
-                          tetromino.rotations[0][row]?.[col] ? 'border-2' : ''
-                        }`}
-                        style={{
-                          backgroundColor: tetromino.rotations[0][row]?.[col] 
-                            ? getPieceColorIndex(nextPiece) + '88' // semi-transparent
-                            : 'transparent',
-                          borderColor: tetromino.rotations[0][row]?.[col] ? '#fff' : 'transparent',
-                        }}
-                      />
-                    ))
-                  );
-                })()}
+        {/* Right Panel - Stats & Next Piece */}
+        <div className="w-full lg:w-48 xl:w-56 flex-shrink-0 space-y-3 lg:space-y-4">
+          {/* Desktop Logo */}
+          <div className="hidden lg:block">
+            <h1 className="text-4xl font-bold text-center mb-4 bg-gradient-to-r from-red-500 via-yellow-500 to-green-500 bg-clip-text text-transparent drop-shadow-lg">
+              TETRIS
+            </h1>
+          </div>
+
+          {/* Desktop Stats */}
+          <div className="hidden lg:block space-y-3">
+            <div className="bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl border border-gray-700 shadow-xl">
+              <div className="space-y-3">
+                <div>
+                  <p className="text-gray-400 text-xs uppercase tracking-wider">SCORE</p>
+                  <p className="text-3xl font-bold text-white">{score.toLocaleString()}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs uppercase tracking-wider">LINES</p>
+                  <p className="text-2xl font-bold text-cyan-400">{lines}</p>
+                </div>
+                <div>
+                  <p className="text-gray-400 text-xs uppercase tracking-wider">LEVEL</p>
+                  <p className="text-2xl font-bold text-yellow-400">{level}</p>
+                </div>
+              </div>
+            </div>
+        
+            {/* High Scores */}
+            {highScores.length > 0 && (
+              <div className="bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl border border-gray-700 shadow-xl">
+                <h3 className="text-gray-300 font-bold mb-2 text-sm uppercase tracking-wider">🏆 Top Scores</h3>
+                <ul className="space-y-1 text-sm">
+                  {highScores.slice(0, 5).map((entry, i) => (
+                    <li key={i} className="flex justify-between">
+                      <span className="text-gray-400">#{i + 1}</span>
+                      <span className="text-green-400 font-bold">{entry.score.toLocaleString()}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             )}
           </div>
-
-          <button
-            onClick={resetGame}
-            className="mt-4 w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded font-bold"
-          >
-            Reset Game
-          </button>
+        
+          {/* Next Piece */}
+          <div className="bg-gray-800/80 backdrop-blur-sm p-4 rounded-xl border border-gray-700 shadow-xl">
+            <h2 className="text-gray-400 text-center mb-3 text-sm uppercase tracking-wider">NEXT</h2>
+            <div className="flex items-center justify-center min-h-[100px]">
+              {nextPiece && (
+                <div className="grid gap-1" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                  {(() => {
+                    const tetromino = getTetromino(nextPiece);
+                    return Array.from({ length: 3 }).map((_, row) => 
+                      Array.from({ length: 3 }).map((_, col) => (
+                        <div
+                          key={`${row}-${col}`}
+                          className={`w-6 h-6 sm:w-8 sm:h-8 rounded-sm ${
+                            tetromino.rotations[0][row]?.[col] ? 'border-2' : ''
+                          }`}
+                          style={{
+                            backgroundColor: tetromino.rotations[0][row]?.[col] 
+                              ? getPieceColorIndex(nextPiece) + '88'
+                              : 'transparent',
+                            borderColor: tetromino.rotations[0][row]?.[col] ? '#fff' : 'transparent',
+                          }}
+                        />
+                      ))
+                    );
+                  })()}
+                </div>
+              )}
+            </div>
+          </div>
+        
+          {/* Action Buttons */}
+          <div className="space-y-2">
+            {!isPaused && !gameOver && (
+              <button
+                onClick={() => setIsPaused(true)}
+                className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white px-4 py-3 rounded-lg font-bold shadow-lg transition transform hover:scale-105"
+              >
+                ⏸ Pause Game
+              </button>
+            )}
+        
+            {isPaused && !gameOver && (
+              <button
+                onClick={() => setIsPaused(false)}
+                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-lg font-bold shadow-lg transition transform hover:scale-105"
+              >
+                ▶ Resume Game
+              </button>
+            )}
+        
+            <button
+              onClick={resetGame}
+              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-4 py-3 rounded-lg font-bold shadow-lg transition transform hover:scale-105"
+            >
+              🔄 Reset Game
+            </button>
+          </div>
         </div>
       </div>
     </div>
