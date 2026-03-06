@@ -11,7 +11,9 @@ let dbInstance: typeof Database | null = null;
 export async function getDb(): Promise<any> {
   if (dbInstance) return dbInstance;
   
-  const SQL = await initSqlJs();
+  const SQL = await initSqlJs({
+    locateFile: (file: string) => `/sqljs/${file}`
+  });
   try {
     // Try to load existing database or create new one
     let fileBuffer: Uint8Array | undefined;

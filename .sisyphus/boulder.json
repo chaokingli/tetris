@@ -1,11 +1,10 @@
 {
-  "active_plan": "/home/cklee/IdeaProjects/game/.sisyphus/plans/tetris-game.md",
-  "started_at": "2026-03-01T16:51:00.000Z",
+  "active_plan": "/Users/cklee/IdeaProjects/tetris-worktrees/nextjs-upgrade-sqljs-fix/.sisyphus/plans/nextjs-upgrade-sqljs-fix.md",
+  "started_at": "2026-03-06T20:14:05.071Z",
   "session_ids": [
-    "ses_355f4acf4ffeArAhvi1W9ZwiSD",
-    "ses_33c758cfeffeFPjsKHwwH6V3LN",
-    "ses_33c1739a0ffe9OzsrACbPQMxE5"
+    "ses_33b36d11effepjjRlmiikFEpmE"
   ],
-  "plan_name": "tetris-game",
-  "worktree_path": "/home/cklee/IdeaProjects/game-tetris-worktree"
+  "plan_name": "nextjs-upgrade-sqljs-fix",
+  "agent": "atlas",
+  "worktree_path": "/Users/cklee/IdeaProjects/tetris-worktrees/nextjs-upgrade-sqljs-fix"
 }

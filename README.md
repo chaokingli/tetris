@@ -14,7 +14,7 @@ A classic Tetris game built with **Next.js**, **React**, and **SQLite** for pers
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **UI**: React + Tailwind CSS
 - **Database**: SQLite via better-sqlite3
 - **Styling**: Tailwind CSS with dark theme

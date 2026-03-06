@@ -32,7 +32,7 @@ export function Game() {
   // Refs for game loop and inputs
   const lastDropTimeRef = useRef<number>(0);
   const dropIntervalRef = useRef<number>(INITIAL_DROP_INTERVAL);
-  const animationFrameRef = useRef<number>();
+  const animationFrameRef = useRef<number>(0);
   const inputLockedRef = useRef<boolean>(false);
 
   // Initialize high scores from database
