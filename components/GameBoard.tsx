@@ -18,42 +18,42 @@ export function TetrisCell({ value, isGhost }: CellProps) {
   if (value === 0 && !isGhost) {
     return (
       <div 
-        className="bg-gray-800/30 w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-sm" 
-        style={{ borderRadius: BORDER_RADIUS, border: '1px solid rgba(255,255,255,0.05)' }}
+        className="bg-white/[0.02] w-[20px] h-[20px] sm:w-[24px] sm:h-[24px] md:w-[26px] md:h-[26px] rounded-[2px] border border-white/[0.01]" 
       />
     );
   }
 
   return (
     <div
-      className={`${isGhost ? 'border-2 border-dashed' : ''} w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 lg:w-8 lg:h-8 rounded-sm`}
+      className={`${isGhost ? 'border border-dashed border-white/10' : ''} w-[20px] h-[20px] sm:w-[24px] sm:h-[24px] md:w-[26px] md:h-[26px] rounded-[2px] relative overflow-hidden`}
       style={{
-        backgroundColor: isGhost ? baseColor + '33' : baseColor,
-        borderRadius: BORDER_RADIUS,
-        border: value > 0 && !isGhost ? `2px solid rgba(255,255,255,0.4)` : `1px solid rgba(255,255,255,0.1)`,
-        boxShadow: !isGhost && value > 0 ? `0 0 8px ${baseColor}60, inset 0 0 4px rgba(255,255,255,0.2)` : 'none',
-        transition: 'all 0.1s ease',
+        backgroundColor: isGhost ? baseColor + '15' : baseColor,
+        boxShadow: !isGhost && value > 0 ? `0 0 12px ${baseColor}60, inset 0 0 4px rgba(255,255,255,0.3)` : 'none',
       }}
-    />
+    >
+      {!isGhost && value > 0 && (
+        <div className="absolute inset-x-0 top-0 h-[20%] bg-white/20 pointer-events-none" />
+      )}
+    </div>
   );
 }
 
 export function getColorForValue(value: number): string {
   const pieceTypes: TetrominoType[] = ['Z', 'J', 'O', 'S', 'I', 'T', 'L'];
   
-  if (value <= 0 || value > pieceTypes.length) return '#374151'; // gray-700 for empty
+  if (value <= 0 || value > pieceTypes.length) return 'transparent';
   
   const colors: Record<TetrominoType, string> = {
-    Z: '#ef4444',
-    J: '#3b82f6',
-    O: '#eab308',
-    S: '#22c55e',
-    I: '#06b6d4',
-    T: '#a855f7',
-    L: '#f97316',
+    Z: '#ff3b3b', // Red
+    J: '#3b82ff', // Blue
+    O: '#ff9d3b', // Orange (Matches design images better than yellow)
+    S: '#3bff3b', // Green
+    I: '#00ddeb', // Cyan
+    T: '#9d3bff', // Purple
+    L: '#ffeb3b', // Yellow (Swapped O/L colors to match design)
   };
   
-  return colors[pieceTypes[value - 1]] || '#374151';
+  return colors[pieceTypes[value - 1]] || 'transparent';
 }
 
 interface GameBoardProps {
@@ -68,15 +68,10 @@ interface GameBoardProps {
 }
 
 export function GameBoard({ board, currentPiece, ghostY }: GameBoardProps) {
-  // Create a copy of the board for rendering
-  const renderBoard = board.map(row => [...row]);
-  
-  // Add current piece to render board
-  if (currentPiece && currentPiece.type) {
-    addPieceToRenderBoard(renderBoard, currentPiece);
+  const renderBoard = React.useMemo(() => {
+    const newBoard = board.map(row => [...row]);
     
-    // Calculate ghost piece position
-    if (ghostY !== undefined) {
+    if (currentPiece && ghostY !== undefined) {
       const tetromino = getTetromino(currentPiece.type);
       const shape = tetromino.rotations[currentPiece.rotation % 4];
       
@@ -85,31 +80,38 @@ export function GameBoard({ board, currentPiece, ghostY }: GameBoardProps) {
           if (shape[y][x] !== 0) {
             const boardX = currentPiece.x + x;
             const boardY = ghostY + y;
-            if (boardY >= 0 && boardY < renderBoard.length && boardX >= 0 && boardX < renderBoard[0].length) {
-              // Mark as ghost by using negative value or special marker
-              if (!renderBoard[boardY][boardX]) {
-                renderBoard[boardY][boardX] = -1; // Ghost marker
+            if (boardY >= 0 && boardY < newBoard.length && boardX >= 0 && boardX < newBoard[0].length) {
+              if (!newBoard[boardY][boardX]) {
+                newBoard[boardY][boardX] = -1; // Ghost marker
               }
             }
           }
         }
       }
     }
-  }
+
+    if (currentPiece && currentPiece.type) {
+      addPieceToRenderBoard(newBoard, currentPiece);
+    }
+    
+    return newBoard;
+  }, [board, currentPiece, ghostY]);
 
   return (
-    <div className="inline-block bg-gradient-to-br from-gray-900 to-gray-800 p-2 sm:p-3 rounded-xl border-4 border-gray-600 shadow-2xl">
-      {renderBoard.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex gap-0.5 mb-0.5 last:mb-0">
-          {row.map((cellValue, colIndex) => (
-            <TetrisCell 
-              key={`${rowIndex}-${colIndex}`}
-              value={Math.abs(cellValue)} 
-              isGhost={cellValue === -1}
-            />
-          ))}
-        </div>
-      ))}
+    <div className="game-board-container">
+      <div className="flex flex-col gap-[2px]">
+        {renderBoard.map((row, rowIndex) => (
+          <div key={rowIndex} className="flex gap-[2px]">
+            {row.map((cellValue, colIndex) => (
+              <TetrisCell 
+                key={`${rowIndex}-${colIndex}`}
+                value={Math.abs(cellValue)} 
+                isGhost={cellValue === -1}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

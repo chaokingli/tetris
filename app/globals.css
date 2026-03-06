@@ -2,21 +2,57 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom Tetris styling */
-@layer components {
-  .tetris-gradient {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  }
-  
-  .neon-glow {
-    text-shadow: 0 0 10px rgba(255, 255, 255, 0.5),
-                 0 0 20px rgba(255, 255, 255, 0.3),
-                 0 0 30px rgba(255, 255, 255, 0.2);
+@layer base {
+  body {
+    @apply bg-[#1a1c23] text-white overflow-hidden;
+    background-image: 
+      radial-gradient(circle at 10% 20%, rgba(91, 33, 182, 0.1) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(29, 78, 216, 0.1) 0%, transparent 40%);
   }
 }
 
-/* Responsive breakpoints:
-  - Mobile: < 640px (sm)
-  - Tablet: 640px - 1024px (md/lg)
-  - Desktop: > 1024px (lg/xl)
-*/
+@layer components {
+  .tetris-logo {
+    @apply font-black tracking-tighter uppercase;
+    background: linear-gradient(to right, #ff3b3b, #ff9d3b, #ffeb3b, #3bff3b, #3b82ff, #9d3bff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.2));
+    font-size: 3rem;
+    line-height: 1;
+    display: inline-block;
+  }
+
+  .tetris-logo-small {
+    @apply font-black tracking-tighter uppercase;
+    background: linear-gradient(to right, #ff3b3b, #ff9d3b, #ffeb3b, #3bff3b, #3b82ff, #9d3bff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-size: 2rem;
+    line-height: 1;
+    display: inline-block;
+  }
+
+  .neon-tetromino {
+    @apply absolute opacity-20 pointer-events-none;
+    filter: blur(1px) drop-shadow(0 0 10px currentColor);
+  }
+
+  .panel-glass {
+    @apply bg-[#1a1c23]/90 backdrop-blur-xl border border-white/5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)];
+  }
+
+  .key-button {
+    @apply bg-[#2d313e] border border-white/10 rounded-lg flex items-center justify-center font-bold text-white/80 transition-all hover:bg-[#3d4150] active:scale-95;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.3);
+  }
+
+  .game-button {
+    @apply flex items-center justify-center gap-3 py-3 px-6 rounded-xl font-bold text-white transition-all active:scale-95 w-full shadow-lg;
+  }
+
+  /* Custom board styling */
+  .game-board-container {
+    @apply relative p-2 bg-[#252833]/40 border-2 border-white/5 rounded-xl shadow-2xl overflow-hidden;
+  }
+}
