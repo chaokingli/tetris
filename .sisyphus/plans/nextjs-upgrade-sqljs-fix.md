@@ -114,7 +114,7 @@ Wave 2 (验证):
 
 ## TODOs
 
-- [ ] 1. 升级 Next.js 16 + React 19 及相关依赖
+- [x] 1. 升级 Next.js 16 + React 19 及相关依赖
 
   **做什么**:
   - 升级 next: 14.2.5 → ^16.0.0
@@ -198,7 +198,7 @@ Wave 2 (验证):
   - Files: package.json, package-lock.json
   - Pre-commit: npm run dev
 
-- [ ] 2. 配置 sql.js WASM 加载
+- [x] 2. 配置 sql.js WASM 加载
 
   **做什么**:
   - 修改 next.config.js 添加 webpack 配置以正确处理 WASM 文件
@@ -274,7 +274,7 @@ Wave 2 (验证):
   - Files: next.config.js
   - Pre-commit: npm run dev
 
-- [ ] 3. 运行构建和类型检查验证
+- [x] 3. 运行构建和类型检查验证
 
   **做什么**:
   - 运行 `npm run build` 验证生产构建
@@ -332,7 +332,7 @@ Wave 2 (验证):
 
   **Commit**: NO (与前序任务合并)
 
-- [ ] 4. Playwright E2E 测试验证
+- [x] 4. Playwright E2E 测试验证
 
   **做什么**:
   - 运行 `npm run test:e2e` 执行端到端测试
@@ -392,7 +392,7 @@ Wave 2 (验证):
 
   **Commit**: NO (与前序任务合并)
 
-- [ ] 5. 清理和文档更新
+- [x] 5. 清理和文档更新
 
   **做什么**:
   - 更新 README.md 反映新的 Next.js 版本

@@ -37,7 +37,7 @@ const TETROMINO_COLORS: Record<TetrominoType, string> = {
 export default function CanvasBoard() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const gameStateRef = useRef<GameState>(createInitialState());
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number>(0);
   const [_, forceUpdate] = useState(0);
 
   const drawCell = useCallback((ctx: CanvasRenderingContext2D, x: number, y: number, color: string, alpha: number = 1) => {

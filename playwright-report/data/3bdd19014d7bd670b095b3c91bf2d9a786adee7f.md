@@ -1,0 +1,42 @@
+# Page snapshot
+
+```yaml
+- generic [active] [ref=e1]:
+  - generic [ref=e3]:
+    - generic [ref=e4]:
+      - heading "Tetris" [level=1] [ref=e5]
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - paragraph [ref=e8]: Score
+          - paragraph [ref=e9]: "0"
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: Lines
+          - paragraph [ref=e12]: "0"
+        - generic [ref=e13]:
+          - paragraph [ref=e14]: Level
+          - paragraph [ref=e15]: "1"
+      - generic [ref=e16]:
+        - heading "Controls" [level=3] [ref=e17]
+        - list [ref=e18]:
+          - listitem [ref=e19]: ←→ Move
+          - listitem [ref=e20]: ↑ Rotate
+          - listitem [ref=e21]: ↓ Soft drop
+          - listitem [ref=e22]: Space Hard drop
+          - listitem [ref=e23]: P Pause
+      - button "Pause Game" [ref=e24]
+    - generic [ref=e247]:
+      - heading "Next" [level=2] [ref=e248]
+      - button "Reset Game" [ref=e249]
+  - generic [ref=e254] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e255]:
+      - img [ref=e256]
+    - generic [ref=e259]:
+      - button "Open issues overlay" [ref=e260]:
+        - generic [ref=e261]:
+          - generic [ref=e262]: "0"
+          - generic [ref=e263]: "1"
+        - generic [ref=e264]: Issue
+      - button "Collapse issues badge" [ref=e265]:
+        - img [ref=e266]
+  - alert [ref=e268]
+```
