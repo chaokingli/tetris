@@ -1,8 +1,7 @@
 'use client';
 
 import React from 'react';
-import { TetrominoType } from '@/lib/tetrominos';
-import { getTetromino } from '@/lib/tetrominos';
+import { TetrominoType, getTetromino } from '@/lib/tetrominos';
 
 interface CellProps {
   value: number; // 0 = empty, >0 = piece color index
@@ -16,40 +15,41 @@ export function TetrisCell({ value, isGhost }: CellProps) {
   const baseColor = getColorForValue(value);
   
   if (value === 0 && !isGhost) {
-    return <div className="bg-gray-800" style={{ width: CELL_SIZE_PX, height: CELL_SIZE_PX }} />;
+    return <div className="bg-gray-800/30" style={{ width: CELL_SIZE_PX, height: CELL_SIZE_PX, borderRadius: BORDER_RADIUS, border: '1px solid rgba(255,255,255,0.05)' }} />;
   }
 
   return (
     <div
       className={isGhost ? 'border-2 border-dashed' : ''}
       style={{
-        backgroundColor: isGhost ? baseColor + '33' : baseColor, // Add transparency for ghost
+        backgroundColor: isGhost ? baseColor + '33' : baseColor,
         width: CELL_SIZE_PX,
         height: CELL_SIZE_PX,
         borderRadius: BORDER_RADIUS,
-        border: value > 0 && !isGhost ? `2px solid ${baseColor}CC` : undefined,
+        border: value > 0 && !isGhost ? `2px solid rgba(255,255,255,0.4)` : `1px solid rgba(255,255,255,0.1)`,
+        boxShadow: !isGhost && value > 0 ? `0 0 8px ${baseColor}60, inset 0 0 4px rgba(255,255,255,0.2)` : 'none',
+        transition: 'all 0.1s ease',
       }}
     />
   );
 }
 
 export function getColorForValue(value: number): string {
-  const colors: Record<number, string> = {
-    1: '#FF6B6B', // Red-ish (Z piece base)
-    2: '#4ECDC4', // Teal (J piece base)
-    3: '#FFE66D', // Yellow (O piece base)
-    4: '#95E1D3', // Mint green (S piece base)
-    5: '#F38181', // Salmon red (I piece base)
-    6: '#AA77A3', // Purple (T piece base)
-    7: '#6B7C93', // Blue-grey (L piece base)
-    8: '#E07D42', // Orange-brown (J piece accent)
-    9: '#F5D5C9', // Light pink (accent color)
-  };
-
-  if (value === 0) return 'transparent';
+  const pieceTypes: TetrominoType[] = ['Z', 'J', 'O', 'S', 'I', 'T', 'L'];
   
-  const index = ((value - 1) % 9) + 1; // Cycle through colors 1-9
-  return colors[index] || '#CCCCCC';
+  if (value <= 0 || value > pieceTypes.length) return '#374151'; // gray-700 for empty
+  
+  const colors: Record<TetrominoType, string> = {
+    Z: '#ef4444',
+    J: '#3b82f6',
+    O: '#eab308',
+    S: '#22c55e',
+    I: '#06b6d4',
+    T: '#a855f7',
+    L: '#f97316',
+  };
+  
+  return colors[pieceTypes[value - 1]] || '#374151';
 }
 
 interface GameBoardProps {
@@ -94,9 +94,9 @@ export function GameBoard({ board, currentPiece, ghostY }: GameBoardProps) {
   }
 
   return (
-    <div className="inline-block bg-gray-900 p-2 rounded-lg border-4 border-gray-700">
+    <div className="inline-block bg-gradient-to-br from-gray-900 to-gray-800 p-3 rounded-xl border-4 border-gray-600 shadow-2xl">
       {renderBoard.map((row, rowIndex) => (
-        <div key={rowIndex} className="flex mb-1 last:mb-0">
+        <div key={rowIndex} className="flex gap-0.5 mb-0.5 last:mb-0">
           {row.map((cellValue, colIndex) => (
             <TetrisCell 
               key={`${rowIndex}-${colIndex}`}
@@ -114,6 +114,16 @@ function addPieceToRenderBoard(board: number[][], piece: { type: TetrominoType; 
   const tetromino = getTetromino(piece.type);
   const shape = tetromino.rotations[piece.rotation % 4];
   
+  const colorIndexMap: Record<TetrominoType, number> = {
+    Z: 1,
+    J: 2,
+    O: 3,
+    S: 4,
+    I: 5,
+    T: 6,
+    L: 7,
+  };
+  
   for (let y = 0; y < shape.length; y++) {
     for (let x = 0; x < shape[y].length; x++) {
       if (shape[y][x] !== 0) {
@@ -123,9 +133,7 @@ function addPieceToRenderBoard(board: number[][], piece: { type: TetrominoType; 
         // Only add if within bounds and not already occupied by a locked piece
         if (boardY >= 0 && boardY < board.length && boardX >= 0 && boardX < board[0].length) {
           if (!board[boardY][boardX]) {
-            // Use color index based on piece type for display
-            const colorIndex = getPieceColorIndex(piece.type);
-            board[boardY][boardX] = colorIndex;
+            board[boardY][boardX] = colorIndexMap[piece.type];
           }
         }
       }
@@ -133,16 +141,4 @@ function addPieceToRenderBoard(board: number[][], piece: { type: TetrominoType; 
   }
 }
 
-function getPieceColorIndex(type: TetrominoType): number {
-  const colors: Record<TetrominoType, number> = {
-    I: 5, // Cyan-ish - salmon red in our palette
-    O: 3, // Yellow
-    T: 6, // Purple
-    S: 4, // Mint green
-    Z: 1, // Red-ish
-    J: 2, // Teal
-    L: 7, // Blue-grey
-  };
-  
-  return colors[type] || 9;
-}
+

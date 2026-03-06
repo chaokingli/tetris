@@ -21,7 +21,7 @@ export function Game() {
     rotation: number;
   } | null>(null);
   
-  const [nextPiece, setNextPiece] = useState<TetrominoType>(() => getRandomTetromino());
+  const [nextPiece, setNextPiece] = useState<TetrominoType | null>(null);
   const [score, setScore] = useState(0);
   const [lines, setLines] = useState(0);
   const [level, setLevel] = useState(1);
@@ -34,6 +34,11 @@ export function Game() {
   const dropIntervalRef = useRef<number>(INITIAL_DROP_INTERVAL);
   const animationFrameRef = useRef<number>(0);
   const inputLockedRef = useRef<boolean>(false);
+
+  // Initialize next piece on client mount to avoid hydration mismatch
+  useEffect(() => {
+    setNextPiece(getRandomTetromino());
+  }, []);
 
   // Initialize high scores from database
   useEffect(() => {
@@ -64,6 +69,8 @@ export function Game() {
 
   // Spawn a new piece at the top center
   const spawnPiece = useCallback(() => {
+    if (!nextPiece) return;
+    
     const type = nextPiece;
     const tetromino = getTetromino(type);
     
