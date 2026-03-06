@@ -1,0 +1,3 @@
+- Updated getDb() function in src/lib/database.ts to include locateFile configuration for sql.js
+- Added proper TypeScript typing to avoid implicit 'any' errors: (file: string) => `/sqljs/${file}`
+- Configuration points to "/sqljs/sql-wasm.wasm" as required for WASM file location in public/sqljs/
