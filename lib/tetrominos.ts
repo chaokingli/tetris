@@ -170,17 +170,17 @@ const BASE_SHAPES: Record<TetrominoType, number[][]> = {
 // Generate all rotation states for each tetromino
 function generateRotations(baseShape: number[][]): number[][][] {
   const rotations: number[][][] = [];
-  
-  // Rotation 0 is the base shape (normalized to top-left)
-  rotations.push(normalizeShape(baseShape));
-  
+
+  // Rotation 0 is the base shape
+  rotations.push(baseShape);
+
   // Generate rotations 1, 2, 3 by rotating 90° clockwise each time
   let current = baseShape;
   for (let i = 1; i < 4; i++) {
     current = rotateMatrix(current);
-    rotations.push(normalizeShape(current));
+    rotations.push(current);
   }
-  
+
   return rotations;
 }
 
@@ -188,45 +188,19 @@ function generateRotations(baseShape: number[][]): number[][][] {
 function rotateMatrix(matrix: number[][]): number[][] {
   const rows = matrix.length;
   const cols = matrix[0].length;
-  
+
   // Create new matrix with swapped dimensions
-  const result: number[][] = Array.from({ length: cols }, () => 
+  const result: number[][] = Array.from({ length: cols }, () =>
     Array(rows).fill(0)
   );
-  
+
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
       result[c][rows - 1 - r] = matrix[r][c];
     }
   }
-  
-  return result;
-}
 
-// Normalize shape to top-left corner
-function normalizeShape(shape: number[][]): number[][] {
-  // Find bounding box
-  let minRow = Infinity, maxRow = -Infinity;
-  let minCol = Infinity, maxCol = -Infinity;
-  
-  for (let r = 0; r < shape.length; r++) {
-    for (let c = 0; c < shape[r].length; c++) {
-      if (shape[r][c] !== 0) {
-        minRow = Math.min(minRow, r);
-        maxRow = Math.max(maxRow, r);
-        minCol = Math.min(minCol, c);
-        maxCol = Math.max(maxCol, c);
-      }
-    }
-  }
-  
-  // Crop to bounding box
-  const height = maxRow - minRow + 1;
-  const width = maxCol - minCol + 1;
-  
-  return shape.slice(minRow, minRow + height).map(row => 
-    row.slice(minCol, minCol + width)
-  );
+  return result;
 }
 
 // Export all tetrominoes with their rotation data and colors (SRS standard)

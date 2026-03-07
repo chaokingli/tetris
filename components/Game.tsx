@@ -21,7 +21,7 @@ export default function Game() {
     rotation: number;
   } | null>(null);
 
-  const [nextPiece, setNextPiece] = useState<TetrominoType | null>(null);
+  const [pieceQueue, setPieceQueue] = useState<TetrominoType[]>([]);
   const [score, setScore] = useState(0);
   const [lines, setLines] = useState(0);
   const [level, setLevel] = useState(1);
@@ -35,9 +35,9 @@ export default function Game() {
   const animationFrameRef = useRef<number>(0);
   const inputLockedRef = useRef<boolean>(false);
 
-  // Initialize next piece on client mount to avoid hydration mismatch
+  // Initialize piece queue on client mount to avoid hydration mismatch
   useEffect(() => {
-    setNextPiece(getRandomTetromino());
+    setPieceQueue([getRandomTetromino(), getRandomTetromino()]);
   }, []);
 
   // Initialize high scores from database
@@ -67,33 +67,38 @@ export default function Game() {
     );
   }
 
-  // Spawn a new piece at the top center
+  // Function to spawn a new piece from the queue
   const spawnPiece = useCallback(() => {
-    if (!nextPiece) return;
+    if (pieceQueue.length < 1) return;
 
-    const type = nextPiece;
+    const type = pieceQueue[0];
     const tetromino = getTetromino(type);
 
-    // Center the piece horizontally (adjust based on shape width)
-    const minWidth = 4 - (type === 'O' ? 2 : type === 'I' || type === 'Z' || type === 'S' ? 3 : 3);
-    const x = Math.floor((BOARD_WIDTH - minWidth) / 2);
+    let x = 3;
+    if (type === 'O') x = 4;
 
-    setCurrentPiece({
+    const newPiece = {
       type,
       x,
-      y: 0, // Start at top
+      y: type === 'I' ? -1 : 0,
       rotation: 0,
-    });
+    };
 
-    setNextPiece(getRandomTetromino());
-  }, [nextPiece]);
+    if (checkCollision(board, type, newPiece.y, 0, x)) {
+      setGameOver(true);
+      return;
+    }
 
-  // Initial piece spawn
+    setCurrentPiece(newPiece);
+    setPieceQueue(prev => [...prev.slice(1), getRandomTetromino()]);
+  }, [board, pieceQueue]);
+
+  // Spawn piece whenever currentPiece is null
   useEffect(() => {
-    if (!currentPiece && !gameOver) {
+    if (!currentPiece && !gameOver && pieceQueue.length > 0) {
       spawnPiece();
     }
-  }, [currentPiece, gameOver, spawnPiece]);
+  }, [currentPiece, gameOver, pieceQueue.length, spawnPiece]);
 
   // Calculate ghost piece Y position (where piece would land)
   const getGhostY = useCallback((): number | undefined => {
@@ -183,15 +188,6 @@ export default function Game() {
       return true;
     }
 
-    // Try wall kick for edge cases
-    const kickOffset = dx > 0 ? [1, -2] : [-1, 2];
-    for (const offset of kickOffset) {
-      if (!checkCollision(board, currentPiece.type, currentPiece.y, currentPiece.rotation, currentPiece.x + offset)) {
-        setCurrentPiece(prev => prev ? ({ ...prev, x: prev.x + offset }) : null);
-        return true;
-      }
-    }
-
     return false;
   }
 
@@ -199,19 +195,19 @@ export default function Game() {
   function hardDrop(): boolean {
     if (!currentPiece || inputLockedRef.current || gameOver || isPaused) return false;
 
+    // Find final drop position
     let dropY = currentPiece.y;
     while (!checkCollision(board, currentPiece.type, dropY + 1, currentPiece.rotation, currentPiece.x)) {
       dropY++;
     }
 
-    setCurrentPiece(prev => prev ? ({ ...prev, y: dropY }) : null);
+    const finalPiece = { ...currentPiece, y: dropY };
 
-    // Lock immediately after hard drop (lock delay starts)
-    inputLockedRef.current = true;
-    setTimeout(() => {
-      lockCurrentPiece();
-      inputLockedRef.current = false;
-    }, 50);
+    // Update piece position visually (though it will be nullified immediately)
+    setCurrentPiece(finalPiece);
+
+    // Lock immediately after hard drop using the final position
+    lockCurrentPiece(finalPiece);
 
     return true;
   }
@@ -219,80 +215,83 @@ export default function Game() {
   const getPieceColorIndex = (type: TetrominoType): number => {
     const colors: Record<TetrominoType, number> = {
       I: 5, // Cyan
-      J: 2, // Teal
-      L: 7, // Blue-grey
+      J: 2, // Blue
+      L: 7, // Orange
       O: 3, // Yellow
-      S: 4, // Mint green
+      S: 4, // Green
       T: 6, // Purple
-      Z: 1, // Red-ish
+      Z: 1, // Red
     };
     return colors[type] || 9;
   };
 
   // Lock current piece to board and check for line clears
-  function lockCurrentPiece() {
-    if (!currentPiece) return;
+  function lockCurrentPiece(pieceToLock = currentPiece) {
+    if (!pieceToLock) return;
 
-    const newBoard = board.map(row => [...row]);
-    const tetromino = getTetromino(currentPiece.type);
-    const shape = tetromino.rotations[currentPiece.rotation % 4];
+    setBoard(prevBoard => {
+      const newBoard = prevBoard.map(row => [...row]);
+      const tetromino = getTetromino(pieceToLock.type);
+      const shape = tetromino.rotations[pieceToLock.rotation % 4];
+      const colorIndex = getPieceColorIndex(pieceToLock.type);
 
-    // Get color index for this piece type
-    const colorIndex = getPieceColorIndex(currentPiece.type);
+      let isGameOver = false;
 
-    for (let y = 0; y < shape.length; y++) {
-      for (let x = 0; x < shape[y].length; x++) {
-        if (shape[y][x] !== 0) {
-          const boardX = currentPiece.x + x;
-          const boardY = currentPiece.y + y;
+      for (let y = 0; y < shape.length; y++) {
+        for (let x = 0; x < shape[y].length; x++) {
+          if (shape[y][x] !== 0) {
+            const boardX = pieceToLock.x + x;
+            const boardY = pieceToLock.y + y;
 
-          // Game over if locking at top
-          if (boardY < 0) {
-            setGameOver(true);
-            return;
+            if (boardY >= 0 && boardY < BOARD_HEIGHT && boardX >= 0 && boardX < BOARD_WIDTH) {
+              newBoard[boardY][boardX] = colorIndex;
+            } else if (boardY < 0) {
+              isGameOver = true;
+            }
           }
-
-          newBoard[boardY][boardX] = colorIndex;
         }
       }
-    }
 
-    // Check for line clears
-    const clearedLines: number[] = [];
-
-    for (let y = BOARD_HEIGHT - 1; y >= 0; y--) {
-      if (newBoard[y].every(cell => cell !== 0)) {
-        clearedLines.push(y);
+      if (isGameOver || pieceToLock.y < 0) {
+        setGameOver(true);
+        return newBoard;
       }
-    }
 
-    // Remove cleared lines and add new empty lines at top
-    for (const y of clearedLines) {
-      newBoard.splice(y, 1);
-      newBoard.unshift(Array(BOARD_WIDTH).fill(0));
-    }
+      // Check for line clears
+      const clearedLines: number[] = [];
+      for (let y = BOARD_HEIGHT - 1; y >= 0; y--) {
+        if (newBoard[y].every(cell => cell !== 0)) {
+          clearedLines.push(y);
+        }
+      }
 
-    setBoard(newBoard);
+      if (clearedLines.length > 0) {
+        for (const y of clearedLines) {
+          newBoard.splice(y, 1);
+          newBoard.unshift(Array(BOARD_WIDTH).fill(0));
+        }
+
+        // Update score and level
+        const points = SCORE_MULTIPLIERS[clearedLines.length] * level;
+        setScore(s => s + points);
+        setLines(l => {
+          const newLines = l + clearedLines.length;
+          const newLevel = Math.floor(newLines / 10) + 1;
+          if (newLevel > level) {
+            setLevel(newLevel);
+            dropIntervalRef.current = Math.max(100, INITIAL_DROP_INTERVAL - (newLevel - 1) * 70);
+          }
+          return newLines;
+        });
+      }
+
+      // Important: Nullify current piece and spawn next ONE turn later
+      // Or we can just trigger it here.
+      return newBoard;
+    });
+
     setCurrentPiece(null);
-
-    if (clearedLines.length > 0) {
-      // Update score and lines
-      const points = SCORE_MULTIPLIERS[clearedLines.length] * level;
-      setScore(prev => prev + points);
-      setLines(prev => {
-        const newLines = prev + clearedLines.length;
-
-        // Level up every 10 lines
-        const newLevel = Math.floor(newLines / 10) + 1;
-        if (newLevel > level) {
-          setLevel(newLevel);
-          dropIntervalRef.current = Math.max(100, INITIAL_DROP_INTERVAL - (newLevel - 1) * 70);
-        }
-
-        return newLines;
-      });
-    }
-
+    // The useEffect will handle spawning the next piece when currentPiece becomes null
   }
   // Game loop - handle piece drop
   useEffect(() => {
@@ -345,6 +344,9 @@ export default function Game() {
           if (currentPiece && !checkCollision(board, currentPiece.type, currentPiece.y + 1, currentPiece.rotation, currentPiece.x)) {
             setCurrentPiece(prev => prev ? ({ ...prev, y: prev.y + 1 }) : null);
             setScore(prev => prev + 1); // Soft drop points
+          } else if (currentPiece) {
+            // If we hit bottom while soft dropping, lock it
+            lockCurrentPiece();
           }
           break;
         case 'ArrowUp':
@@ -373,6 +375,7 @@ export default function Game() {
   async function resetGame() {
     setBoard(createEmptyBoard());
     setCurrentPiece(null);
+    setPieceQueue([getRandomTetromino(), getRandomTetromino()]); // Reset piece queue
     setScore(0);
     setLines(0);
     setLevel(1);
@@ -388,7 +391,7 @@ export default function Game() {
 
   const ghostY = getGhostY();
 
-  if (!nextPiece) return null;
+  if (pieceQueue.length === 0) return null;
 
   return (
     <div className="min-h-screen bg-[#1a1c23] flex items-center justify-center p-4 overflow-hidden relative font-sans selection:bg-purple-500/30">
@@ -478,19 +481,27 @@ export default function Game() {
               <div className="panel-glass p-2 w-20 flex flex-col items-center gap-1 border-l-0 rounded-l-none shadow-xl">
                 <p className="text-white/30 text-[9px] font-black tracking-widest uppercase border-b border-white/5 w-full text-center pb-0.5">Next</p>
                 <div className="w-14 h-14 flex items-center justify-center scale-90">
-                  {nextPiece && (
-                    <div className="grid grid-cols-4 gap-[2px]">
+                  {pieceQueue.length > 0 && (
+                    <div
+                      className="grid gap-[2px]"
+                      style={{
+                        gridTemplateColumns: `repeat(${getTetromino(pieceQueue[0]).rotations[0][0].length}, min-content)`,
+                        gridTemplateRows: `repeat(${getTetromino(pieceQueue[0]).rotations[0].length}, min-content)`
+                      }}
+                    >
                       {(() => {
-                        const tetromino = getTetromino(nextPiece);
+                        const nextType = pieceQueue[0];
+                        const tetromino = getTetromino(nextType);
                         const shape = tetromino.rotations[0];
-                        const color = getColorForPiece(nextPiece);
+                        const color = getColorForPiece(nextType);
                         return shape.map((row, r) => row.map((isOccupied, c) => (
                           <div
                             key={`${r}-${c}`}
                             className="w-2.5 h-2.5 rounded-[1px]"
                             style={{
                               backgroundColor: isOccupied ? color : 'transparent',
-                              boxShadow: isOccupied ? `0 0 8px ${color}60` : 'none'
+                              boxShadow: isOccupied ? `0 0 8px ${color}60` : 'none',
+                              opacity: isOccupied ? 1 : 0
                             }}
                           />
                         )));
@@ -586,13 +597,13 @@ export default function Game() {
 // Helper to get color for piece type
 function getColorForPiece(type: TetrominoType): string {
   const colors: Record<TetrominoType, string> = {
-    Z: '#ff3b3b',
-    J: '#3b82ff',
-    O: '#ffeb3b',
-    S: '#3bff3b',
-    I: '#3bcfff',
-    T: '#9d3bff',
-    L: '#ff9d3b',
+    Z: '#ff3b3b', // Red
+    J: '#3b82ff', // Blue
+    O: '#ff9d3b', // Orange
+    S: '#3bff3b', // Green
+    I: '#00ddeb', // Cyan
+    T: '#9d3bff', // Purple
+    L: '#ffeb3b', // Yellow
   };
   return colors[type] || '#ffffff';
 }
