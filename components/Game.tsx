@@ -101,7 +101,7 @@ export default function Game() {
 
     let ghostY = currentPiece.y;
 
-    while (!checkCollision(board, currentPiece.type, ghostY + 1, currentPiece.rotation)) {
+    while (!checkCollision(board, currentPiece.type, ghostY + 1, currentPiece.rotation, currentPiece.x)) {
       ghostY++;
     }
 
@@ -117,7 +117,7 @@ export default function Game() {
     pieceType: TetrominoType,
     y: number,
     rotation: number,
-    xOffset = 0
+    x: number
   ): boolean {
     const tetromino = getTetromino(pieceType);
     const shape = tetromino.rotations[rotation % 4];
@@ -125,7 +125,7 @@ export default function Game() {
     for (let row = 0; row < shape.length; row++) {
       for (let col = 0; col < shape[row].length; col++) {
         if (shape[row][col] !== 0) {
-          const boardX = xOffset + col;
+          const boardX = x + col;
           const boardY = y + row;
 
           // Wall collision
@@ -157,7 +157,7 @@ export default function Game() {
       : tetromino.wallKicks.counterClockwise;
 
     for (const offset of kickOffsets) {
-      if (!checkCollision(board, currentPiece.type, currentPiece.y, newRotation, offset.x)) {
+      if (!checkCollision(board, currentPiece.type, currentPiece.y, newRotation, currentPiece.x + offset.x)) {
         setCurrentPiece(prev => prev ? ({
           ...prev,
           x: prev.x + offset.x,
@@ -178,7 +178,7 @@ export default function Game() {
   function movePiece(dx: number): boolean {
     if (!currentPiece || inputLockedRef.current || gameOver || isPaused) return false;
 
-    if (!checkCollision(board, currentPiece.type, currentPiece.y, currentPiece.rotation, dx)) {
+    if (!checkCollision(board, currentPiece.type, currentPiece.y, currentPiece.rotation, currentPiece.x + dx)) {
       setCurrentPiece(prev => prev ? ({ ...prev, x: prev.x + dx }) : null);
       return true;
     }
@@ -186,7 +186,7 @@ export default function Game() {
     // Try wall kick for edge cases
     const kickOffset = dx > 0 ? [1, -2] : [-1, 2];
     for (const offset of kickOffset) {
-      if (!checkCollision(board, currentPiece.type, currentPiece.y, currentPiece.rotation, offset)) {
+      if (!checkCollision(board, currentPiece.type, currentPiece.y, currentPiece.rotation, currentPiece.x + offset)) {
         setCurrentPiece(prev => prev ? ({ ...prev, x: prev.x + offset }) : null);
         return true;
       }
@@ -200,7 +200,7 @@ export default function Game() {
     if (!currentPiece || inputLockedRef.current || gameOver || isPaused) return false;
 
     let dropY = currentPiece.y;
-    while (!checkCollision(board, currentPiece.type, dropY + 1, currentPiece.rotation)) {
+    while (!checkCollision(board, currentPiece.type, dropY + 1, currentPiece.rotation, currentPiece.x)) {
       dropY++;
     }
 
@@ -273,6 +273,7 @@ export default function Game() {
     }
 
     setBoard(newBoard);
+    setCurrentPiece(null);
 
     if (clearedLines.length > 0) {
       // Update score and lines
@@ -303,7 +304,7 @@ export default function Game() {
       const deltaTime = timestamp - lastDropTimeRef.current;
 
       if (deltaTime >= dropIntervalRef.current) {
-        if (!checkCollision(board, currentPiece.type, currentPiece.y + 1, currentPiece.rotation)) {
+        if (!checkCollision(board, currentPiece.type, currentPiece.y + 1, currentPiece.rotation, currentPiece.x)) {
           setCurrentPiece(prev => prev ? ({ ...prev, y: prev.y + 1 }) : null);
           lastDropTimeRef.current = timestamp;
         } else {
@@ -341,7 +342,7 @@ export default function Game() {
         case 'ArrowDown':
           e.preventDefault();
           // Soft drop - speed up fall
-          if (currentPiece && !checkCollision(board, currentPiece.type, currentPiece.y + 1, currentPiece.rotation)) {
+          if (currentPiece && !checkCollision(board, currentPiece.type, currentPiece.y + 1, currentPiece.rotation, currentPiece.x)) {
             setCurrentPiece(prev => prev ? ({ ...prev, y: prev.y + 1 }) : null);
             setScore(prev => prev + 1); // Soft drop points
           }
@@ -467,7 +468,7 @@ export default function Game() {
               <button className="key-button w-8 h-8" onClick={() => movePiece(-1)}>←</button>
               <button className="key-button w-8 h-8" onClick={() => movePiece(1)}>→</button>
               <button className="key-button w-8 h-8" onClick={() => rotatePiece('clockwise')}>↑</button>
-              <button className="key-button w-8 h-8" onClick={() => { if (currentPiece && !checkCollision(board, currentPiece.type, currentPiece.y + 1, currentPiece.rotation)) { setCurrentPiece(prev => prev ? ({ ...prev, y: prev.y + 1 }) : null); } }}>↓</button>
+              <button className="key-button w-8 h-8" onClick={() => { if (currentPiece && !checkCollision(board, currentPiece.type, currentPiece.y + 1, currentPiece.rotation, currentPiece.x)) { setCurrentPiece(prev => prev ? ({ ...prev, y: prev.y + 1 }) : null); } }}>↓</button>
             </div>
           </div>
 
