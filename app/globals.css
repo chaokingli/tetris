@@ -5,9 +5,21 @@
 @layer base {
   body {
     @apply bg-[#1a1c23] text-white overflow-hidden;
-    background-image: 
+    background-image:
       radial-gradient(circle at 10% 20%, rgba(91, 33, 182, 0.1) 0%, transparent 40%),
       radial-gradient(circle at 90% 80%, rgba(29, 78, 216, 0.1) 0%, transparent 40%);
+  }
+
+  /* Prevent pull-to-refresh on mobile */
+  html {
+    overscroll-behavior-y: contain;
+  }
+
+  /* Prevent text selection during touch interactions */
+  .touch-none {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
   }
 }
 
@@ -54,5 +66,46 @@
   /* Custom board styling */
   .game-board-container {
     @apply relative p-2 bg-[#252833]/40 border-2 border-white/5 rounded-xl shadow-2xl overflow-hidden;
+  }
+
+  /* Touch controls styling */
+  .touch-controls button {
+    @apply active:scale-95 transition-transform duration-75;
+  }
+
+  .touch-controls button:active {
+    @apply brightness-125;
+  }
+
+  /* Responsive game layout */
+  @media (max-width: 639px) {
+    /* Mobile - vertical layout */
+    .game-board-container {
+      @apply scale-90;
+    }
+  }
+
+  @media (min-width: 640px) and (max-width: 1024px) {
+    /* Tablet - side by side layout */
+    .game-board-container {
+      @apply scale-100;
+    }
+  }
+
+  /* Safe area padding for devices with notches */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
   }
 }

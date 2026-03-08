@@ -6,6 +6,8 @@ export interface GameState {
   board: string[][];
   currentPiece: { type: TetrominoType; shape: number[][]; row: number; col: number } | null;
   nextPiece: TetrominoType;
+  holdPiece: TetrominoType | null;
+  canHold: boolean;
   score: number;
   level: number;
   linesCleared: number;

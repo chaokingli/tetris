@@ -23,6 +23,8 @@ export function getInitialGameState(playerName: string): GameState {
     board: Array(20).fill(null).map(() => Array(10).fill(null)),
     currentPiece: null,
     nextPiece,
+    holdPiece: null,
+    canHold: true,
     score: 0,
     level: 1,
     linesCleared: 0,
@@ -302,8 +304,36 @@ export function checkGameOver(board: string[][]): boolean {
 }
 
 function spawnNextPiece(nextType: TetrominoType): { type: TetrominoType; shape: number[][]; row: number; col: number } {
-  const newNextType = (['I', 'O', 'T', 'S', 'Z', 'J', 'L'] as TetrominoType[])[Math.floor(Math.random() * 7)];
   return { type: nextType, shape: SHAPES[nextType], row: 0, col: Math.floor((10 - SHAPES[nextType][0].length) / 2) };
+}
+
+// Hold piece function - swap current piece with held piece
+export function holdPiece(gameState: GameState): GameState {
+  if (!gameState.currentPiece || !gameState.canHold) {
+    return gameState;
+  }
+
+  const currentType = gameState.currentPiece.type;
+  const newHoldPiece = gameState.holdPiece;
+
+  if (newHoldPiece === null) {
+    // First hold - just store current piece and spawn new one
+    return {
+      ...gameState,
+      holdPiece: currentType,
+      canHold: false,
+      currentPiece: spawnNextPiece(gameState.nextPiece),
+      nextPiece: (['I', 'O', 'T', 'S', 'Z', 'J', 'L'] as TetrominoType[])[Math.floor(Math.random() * 7)],
+    };
+  }
+
+  // Swap with held piece
+  return {
+    ...gameState,
+    holdPiece: currentType,
+    canHold: false,
+    currentPiece: { type: newHoldPiece, shape: SHAPES[newHoldPiece], row: 0, col: Math.floor((10 - SHAPES[newHoldPiece][0].length) / 2) },
+  };
 }
 
 // Re-export types and interfaces for external use

@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useRef, useState, useCallback } from 'react';
 import { TetrominoType, getTetromino } from '@/lib/tetrominos';
 
 interface CellProps {
@@ -65,9 +65,28 @@ interface GameBoardProps {
     rotation: number;
   };
   ghostY?: number;
+  // Touch/gesture callbacks
+  onTap?: () => void;        // Single tap - rotate
+  onDoubleTap?: () => void;  // Double tap - hard drop
+  onSwipeLeft?: () => void;  // Swipe left - move left
+  onSwipeRight?: () => void; // Swipe right - move right
+  onSwipeDown?: () => void;  // Swipe down - soft drop
+  onTwoFingerTap?: () => void; // Two-finger tap - pause/hold
+  onLongPress?: () => void;  // Long press - hold piece
 }
 
-export function GameBoard({ board, currentPiece, ghostY }: GameBoardProps) {
+export function GameBoard({
+  board,
+  currentPiece,
+  ghostY,
+  onTap,
+  onDoubleTap,
+  onSwipeLeft,
+  onSwipeRight,
+  onSwipeDown,
+  onTwoFingerTap,
+  onLongPress,
+}: GameBoardProps) {
   const renderBoard = React.useMemo(() => {
     const newBoard = board.map(row => [...row]);
 
@@ -98,9 +117,140 @@ export function GameBoard({ board, currentPiece, ghostY }: GameBoardProps) {
     return newBoard;
   }, [board, currentPiece, ghostY]);
 
+  // Touch gesture handling
+  const touchStartX = useRef(0);
+  const touchStartY = useRef(0);
+  const touchStartTime = useRef(0);
+  const isSwiping = useRef(false);
+  const lastTapTime = useRef(0);
+  const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+  const [tapPosition, setTapPosition] = useState<{ x: number; y: number } | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    e.preventDefault();
+
+    // Two-finger detection
+    if (e.touches.length === 2) {
+      onTwoFingerTap?.();
+      vibrate(10);
+      return;
+    }
+
+    // Single touch
+    if (e.touches.length === 1) {
+      touchStartX.current = e.touches[0].clientX;
+      touchStartY.current = e.touches[0].clientY;
+      touchStartTime.current = Date.now();
+      isSwiping.current = false;
+
+      // Store tap position for visual feedback
+      const rect = (e.target as HTMLElement).getBoundingClientRect();
+      setTapPosition({
+        x: e.touches[0].clientX - rect.left,
+        y: e.touches[0].clientY - rect.top,
+      });
+
+      // Start long press timer
+      longPressTimer.current = setTimeout(() => {
+        if (!isSwiping.current) {
+          onLongPress?.();
+          vibrate(20);
+        }
+      }, 500);
+    }
+  }, [onTwoFingerTap, onLongPress]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+
+    const deltaX = e.touches[0].clientX - touchStartX.current;
+    const deltaY = e.touches[0].clientY - touchStartY.current;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+
+    // Detect if this is becoming a swipe
+    if (absX > 10 || absY > 10) {
+      isSwiping.current = true;
+
+      // Cancel long press if swiping
+      if (longPressTimer.current) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+      }
+
+      // Clear tap position feedback
+      setTapPosition(null);
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    // Cancel long press timer
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+
+    // Only handle single-touch gestures
+    if (e.changedTouches.length !== 1) return;
+
+    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
+    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
+    const absX = Math.abs(deltaX);
+    const absY = Math.abs(deltaY);
+    const now = Date.now();
+
+    // Determine gesture type
+    if (absX < 10 && absY < 10) {
+      // Tap gesture (not a swipe)
+      if (now - lastTapTime.current < 300) {
+        // Double tap detected
+        onDoubleTap?.();
+        vibrate(15);
+        lastTapTime.current = 0;
+      } else {
+        // Single tap detected
+        onTap?.();
+        vibrate(10);
+        lastTapTime.current = now;
+      }
+    } else if (absX > absY) {
+      // Horizontal swipe
+      if (absX > 30) {
+        if (deltaX > 0) {
+          onSwipeRight?.();
+          vibrate(5);
+        } else {
+          onSwipeLeft?.();
+          vibrate(5);
+        }
+      }
+    } else {
+      // Vertical swipe
+      if (absY > 30 && deltaY > 0) {
+        onSwipeDown?.();
+        vibrate(5);
+      }
+    }
+
+    // Clear tap position feedback
+    setTapPosition(null);
+  }, [onTap, onDoubleTap, onSwipeLeft, onSwipeRight, onSwipeDown]);
+
+  // Vibration helper
+  const vibrate = (duration: number) => {
+    if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+      navigator.vibrate(duration);
+    }
+  };
+
   return (
-    <div className="game-board-container">
-      <div className="flex flex-col gap-[2px]">
+    <div
+      className="game-board-container touch-none select-none"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      <div className="flex flex-col gap-[2px] relative">
         {renderBoard.map((row, rowIndex) => (
           <div key={rowIndex} className="flex gap-[2px]">
             {row.map((cellValue, colIndex) => (
@@ -112,6 +262,16 @@ export function GameBoard({ board, currentPiece, ghostY }: GameBoardProps) {
             ))}
           </div>
         ))}
+        {/* Tap feedback overlay */}
+        {tapPosition && (
+          <div
+            className="absolute w-8 h-8 rounded-full bg-white/30 animate-ping pointer-events-none"
+            style={{
+              left: tapPosition.x - 16,
+              top: tapPosition.y - 16,
+            }}
+          />
+        )}
       </div>
     </div>
   );
